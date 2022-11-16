@@ -1,52 +1,57 @@
-import { getPhotos } from './get-photos';
+import { GetingPhotos } from './get-photos';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
-const searchFormEl = document.querySelector('#search-form');
-const galleryEl = document.querySelector('.gallery');
-galleryEl.addEventListener('click', onPreviewImgClick);
+const refs = {
+    searchFormEl: document.querySelector('#search-form'),
+    galleryEl: document.querySelector('.gallery'),
+    loadMoreWrapper: document.querySelector('.load-more-wrapper'),
+    loadMore: document.querySelector('.load-more'),   
+}
+const getingPhotos = new GetingPhotos();
 
-const modal = new SimpleLightbox(
-                                    '.gallery a',
-                                    {
-                                        captionDelay: 250,
-                                    }
-                                );
-
-searchFormEl.addEventListener('submit', onSubmit);
+refs.searchFormEl.addEventListener('submit', onSubmit);
+refs.galleryEl.addEventListener('click', onImgClick);
+refs.loadMore.addEventListener('click', onLoadMore);
 
 function onSubmit(e) { 
     e.preventDefault();
-    const query = e.target.searchQuery.value;
-   
-    getPhotos(query)
-        .then((response) => {
-            const photos = response.data.hits;
-            if (photos.length === 0) { 
-                Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+    clearGallery();
+    refs.loadMoreWrapper.classList.add('is-hidden');
+
+    getingPhotos.query = e.target.searchQuery.value;  
+    getingPhotos.resetPage();
+    getingPhotos.getPhotos()
+        .then(photos => {
+            if (!photos) { 
+                Notify.failure("Sorry, there are no images matching your search query. Please try again.");
                 return;
             };
-            galleryEl.insertAdjacentHTML('beforeend', photos.map(makeGalleryMarkup).join(''));
+            // console.log(photos);
+            makeGalleryMarkup(photos);
+            getingPhotos.increasePage();
+            refs.loadMoreWrapper.classList.remove('is-hidden');
         })
-        .catch((error => {
-            console.error(error);
-        })
-    );  
+        .catch(error => {
+            console.log("I'm here", error);
+            Notify.failure(error);
+            refs.loadMoreWrapper.classList.add('is-hidden');
+        });  
 }
 
-function makeGalleryMarkup(photos) { 
-    const { webformatURL,
-            largeImageURL,
-            tags,
-            likes,
-            views,
-            comments,
-            downloads } = photos;
+function makeGalleryMarkup(photos) {  
+    refs.galleryEl.insertAdjacentHTML('beforeend', photos.map(el => { 
+        const { webformatURL,
+                largeImageURL,
+                tags,
+                likes,
+                views,
+                comments,
+                downloads } = el;
 
-    const divEl = `<a class="gallery-item" href="${largeImageURL}">
-                    <div class="photo-card">
-                        <img class="photo" src="${webformatURL}" alt="" loading="lazy" />
+        const cardEl = `<a class="photo-card" href="${largeImageURL}">
+                        <img class="photo" src="${webformatURL}" alt="${tags}" loading="lazy"/>
                         
                         <div class="info">
                             <p class="info-item">
@@ -66,17 +71,36 @@ function makeGalleryMarkup(photos) {
                                 ${downloads}
                             </p>
                         </div>
-                    </div>
-                </a>`;
-    return divEl;
+                    </a>`;
+        return cardEl;
+    }).join(''));
 }
 
-function onPreviewImgClick(event) {
-    // e.preventDefault();
-    console.log(event);
-    if (event.target.nodeName !== 'IMG') {
-        return;
-    }; 
+function onImgClick(e) {
+    e.preventDefault();
 
-    modal.open(event);
+    if (e.target.nodeName !== 'IMG') {
+        return;
+    };
+
+    const lightbox = new SimpleLightbox('.gallery a');
+    lightbox.open(e);
+}
+
+function onLoadMore(e) {
+    getingPhotos.getPhotos()
+        .then((photos) => {  
+            makeGalleryMarkup(photos);
+            getingPhotos.increasePage();
+        })
+        .catch(error => {
+            console.log("I'm here", error);
+            Notify.failure(error);
+            refs.loadMoreWrapper.classList.add('is-hidden');
+        }); 
+    // console.log(getingPhotos.viewedPhotos);
+}
+
+function clearGallery() { 
+    refs.galleryEl.innerHTML = '';
 }
