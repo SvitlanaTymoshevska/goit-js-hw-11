@@ -9,7 +9,9 @@ const refs = {
     loadMoreWrapper: document.querySelector('.load-more-wrapper'),
     loadMore: document.querySelector('.load-more'),   
 }
+
 const getingPhotos = new GetingPhotos();
+let lightbox;
 
 refs.searchFormEl.addEventListener('submit', onSubmit);
 refs.galleryEl.addEventListener('click', onImgClick);
@@ -24,19 +26,12 @@ function onSubmit(e) {
     getingPhotos.resetPage();
     getingPhotos.getPhotos()
         .then(photos => {
-            if (!photos) { 
-                Notify.failure("Sorry, there are no images matching your search query. Please try again.");
-                return;
-            };
-            // console.log(photos);
             makeGalleryMarkup(photos);
             getingPhotos.increasePage();
             refs.loadMoreWrapper.classList.remove('is-hidden');
         })
         .catch(error => {
-            console.log("I'm here", error);
-            Notify.failure(error);
-            refs.loadMoreWrapper.classList.add('is-hidden');
+            Notify.failure("Sorry, there are no images matching your search query. Please try again.");
         });  
 }
 
@@ -74,17 +69,18 @@ function makeGalleryMarkup(photos) {
                     </a>`;
         return cardEl;
     }).join(''));
+
+    lightbox = new SimpleLightbox('.gallery a');
 }
 
 function onImgClick(e) {
     e.preventDefault();
-
+    
     if (e.target.nodeName !== 'IMG') {
         return;
     };
 
-    const lightbox = new SimpleLightbox('.gallery a');
-    lightbox.open(e);
+    lightbox.open(e);  
 }
 
 function onLoadMore(e) {
@@ -92,13 +88,13 @@ function onLoadMore(e) {
         .then((photos) => {  
             makeGalleryMarkup(photos);
             getingPhotos.increasePage();
+            Notify.info(`Hooray! We found ${getingPhotos.totalHits} images.`);
+            lightbox.refresh();
         })
         .catch(error => {
-            console.log("I'm here", error);
-            Notify.failure(error);
+            Notify.failure("We're sorry, but you've reached the end of search results.");
             refs.loadMoreWrapper.classList.add('is-hidden');
         }); 
-    // console.log(getingPhotos.viewedPhotos);
 }
 
 function clearGallery() { 

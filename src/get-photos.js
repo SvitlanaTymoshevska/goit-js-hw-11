@@ -2,7 +2,8 @@ class GetingPhotos {
     constructor() { 
         this.searchQuery = '';
         this.page = 1;
-        this.viewedPhotos = 0;
+        this.shownPhotos = 0;
+        this.totalHits = 0;
     }
     
     getPhotos() {
@@ -17,24 +18,20 @@ class GetingPhotos {
                 orientation: 'horizontal',
                 safesearch: true,
                 page: this.page,
-                per_page: 100,
+                per_page: 40,
             }
         })
             .then(response => {
                 const photos = response.data.hits;
-                this.viewedPhotos = this.viewedPhotos + photos.length;
-                console.log('viewedPhotos', this.viewedPhotos);
-                console.log('totalHits', response.data.totalHits);
+                this.shownPhotos = this.shownPhotos + photos.length;
+                this.totalHits = response.data.totalHits;
 
-                if (this.viewedPhotos >= 400) {
-                    throw "We're sorry, but you've reached the end of search results.";
-                    // console.log("We're sorry, but you've reached the end of search results.");
-                }; 
-                
                 if (photos.length === 0) {
-                    return 0;
+                    throw new Error();
                 };
-                
+                if (this.shownPhotos >= this.totalHits) {
+                    throw new Error();
+                }; 
                 return photos;
             })
     }
@@ -47,15 +44,9 @@ class GetingPhotos {
         this.page = 1;
     }
 
-    get query() { 
-        return this.searchQuery
-    }
-
     set query(newQuery) { 
         this.searchQuery = newQuery;
     }
-
- 
 }
 
 export { GetingPhotos };
