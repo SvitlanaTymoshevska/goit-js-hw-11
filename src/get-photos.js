@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 class GetingPhotos { 
     constructor() { 
         this.searchQuery = '';
@@ -7,8 +9,6 @@ class GetingPhotos {
     }
     
     async getPhotos() {
-        const axios = require('axios').default;
-        
         const response = await axios({
             url: 'https://pixabay.com/api/',
             params: {
