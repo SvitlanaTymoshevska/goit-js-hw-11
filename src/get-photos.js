@@ -6,10 +6,10 @@ class GetingPhotos {
         this.totalHits = 0;
     }
     
-    getPhotos() {
+    async getPhotos() {
         const axios = require('axios').default;
         
-        return axios({
+        const response = await axios({
             url: 'https://pixabay.com/api/',
             params: {
                 key: '31318291-9a8be1d683ef762d4988421c4',
@@ -20,20 +20,19 @@ class GetingPhotos {
                 page: this.page,
                 per_page: 40,
             }
-        })
-            .then(response => {
-                const photos = response.data.hits;
-                this.shownPhotos = this.shownPhotos + photos.length;
-                this.totalHits = response.data.totalHits;
+        });
+      
+        const photos = response.data.hits;
+        this.shownPhotos = this.shownPhotos + photos.length;
+        this.totalHits = response.data.totalHits;
 
-                if (photos.length === 0) {
-                    throw new Error();
-                };
-                if (this.shownPhotos >= this.totalHits) {
-                    throw new Error();
-                }; 
-                return photos;
-            })
+        if (photos.length === 0) {
+            throw new Error();
+        };
+        if (this.shownPhotos >= this.totalHits) {
+            throw new Error();
+        }; 
+        return photos;
     }
 
     increasePage() { 

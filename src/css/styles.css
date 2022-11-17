@@ -42,6 +42,7 @@ p {
     background-color:green;
     box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
 }
+
 .search-wrapper {
     display: flex;
     align-items: center;
@@ -69,16 +70,12 @@ p {
     border: none; 
     cursor: pointer;
 }
+
 .search-icon {
     fill:#212121;
 }
 
 /* Gallery */
-/* :root {
-    --timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    --animation-duration: 250ms;
-} */
-
 .gallery {
     display: grid;
     max-width: 1400px;
